@@ -3,6 +3,8 @@
 # dependencies
 /node_modules
 /.pnp
+/.gemini
+/.agent
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -39,4 +41,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.gemini
+

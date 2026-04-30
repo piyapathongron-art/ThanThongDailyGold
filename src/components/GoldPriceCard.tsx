@@ -16,9 +16,9 @@ const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ title, buyPrice, sellPric
         {diff && (
           <div className={`flex items-center gap-2 px-5 py-2 rounded-full text-2xl font-bold ${isUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
             {isUp ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7" /><path d="M12 19V5" /></svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
             )}
             {diff}
           </div>
@@ -35,7 +35,7 @@ const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ title, buyPrice, sellPric
             <span className="text-[7rem] leading-none font-black gold-gradient-text tracking-tighter">{buyPrice}</span>
           </div>
         </div>
-        
+
         <div className="h-px bg-slate-800/50"></div>
 
         <div className="space-y-4">

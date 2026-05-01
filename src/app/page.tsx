@@ -1,90 +1,102 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import GoldPriceCard from '@/components/GoldPriceCard';
 import PromoSlider from '@/components/PromoSlider';
 import { getGoldPriceApi } from "@/api/mainApi";
-import { cookies } from 'next/headers';
 import Link from 'next/link';
+import { useGoldStore } from '@/store/useGoldStore';
 
-export default async function Home() {
-  const cookieStore = await cookies();
-  const settingsCookie = cookieStore.get('gold_settings');
+export default function Home() {
+  const { 
+    goldBarMode, 
+    goldOrnamentMode, 
+    manualData, 
+    apiData, 
+    apiStatus,
+    setApiData,
+    setApiStatus
+  } = useGoldStore();
 
-  let settings = {
-    goldBarMode: 'api',
-    goldOrnamentMode: 'api',
-    manualData: {
-      goldBarBuy: '44,200',
-      goldBarSell: '44,300',
-      goldBuy: '43,403',
-      goldSell: '44,800',
-    }
-  };
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  if (settingsCookie) {
-    try {
-      settings = JSON.parse(decodeURIComponent(settingsCookie.value));
-    } catch (e) {
-      console.error("Failed to parse settings cookie", e);
-    }
+  useEffect(() => {
+    setIsHydrated(true);
+    const fetchData = async () => {
+      setApiStatus('loading');
+      try {
+        const res = await getGoldPriceApi();
+        if (res.data && res.data.response) {
+          setApiData(res.data.response);
+        } else {
+          setApiStatus('offline');
+        }
+      } catch (error) {
+        console.error("Failed to fetch gold prices:", error);
+        setApiStatus('offline');
+      }
+    };
+
+    fetchData();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!isHydrated) {
+    return <div className="min-h-screen bg-[#0f172a]" />; // Simple placeholder during hydration
   }
 
-  let goldPrices = [
+  // Determine display modes with automatic fallback
+  const effectiveBarMode = apiStatus === 'offline' ? 'manual' : goldBarMode;
+  const effectiveOrnamentMode = apiStatus === 'offline' ? 'manual' : goldOrnamentMode;
+
+  // Prepare price data for display
+  const displayGoldPrices = [
     {
       title: 'ทองคำแท่ง 96.5%',
-      buyPrice: 'รอข้อมูล...',
-      sellPrice: 'รอข้อมูล...',
-      diff: '0',
+      buyPrice: effectiveBarMode === 'manual' ? manualData.goldBarBuy : (apiData?.price?.gold_bar?.buy || 'รอข้อมูล...'),
+      sellPrice: effectiveBarMode === 'manual' ? manualData.goldBarSell : (apiData?.price?.gold_bar?.sell || 'รอข้อมูล...'),
+      diff: effectiveBarMode === 'manual' ? 'Manual' : (apiStatus === 'offline' ? 'Offline' : 'API'),
       isUp: true,
     },
     {
       title: 'ทองรูปพรรณ 96.5%',
-      buyPrice: 'รอข้อมูล...',
-      sellPrice: 'รอข้อมูล...',
-      diff: '0',
+      buyPrice: effectiveOrnamentMode === 'manual' ? manualData.goldBuy : (apiData?.price?.gold?.buy || 'รอข้อมูล...'),
+      sellPrice: effectiveOrnamentMode === 'manual' ? manualData.goldSell : (apiData?.price?.gold?.sell || 'รอข้อมูล...'),
+      diff: effectiveOrnamentMode === 'manual' ? 'Manual' : (apiStatus === 'offline' ? 'Offline' : 'API'),
       isUp: true,
     },
   ];
 
-  try {
-    // 1. Fetch API Data as base
-    const res = await getGoldPriceApi();
-    const apiData = res.data.response.price;
-
-    // 2. Set Gold Bar data
-    if (settings.goldBarMode === 'manual') {
-      goldPrices[0].buyPrice = settings.manualData.goldBarBuy;
-      goldPrices[0].sellPrice = settings.manualData.goldBarSell;
-      goldPrices[0].diff = 'Manual';
-    } else {
-      goldPrices[0].buyPrice = apiData.gold_bar.buy;
-      goldPrices[0].sellPrice = apiData.gold_bar.sell;
-      goldPrices[0].diff = '100';
-    }
-
-    // 3. Set Gold Ornament data
-    if (settings.goldOrnamentMode === 'manual') {
-      goldPrices[1].buyPrice = settings.manualData.goldBuy;
-      goldPrices[1].sellPrice = settings.manualData.goldSell;
-      goldPrices[1].diff = 'Manual';
-    } else {
-      goldPrices[1].buyPrice = apiData.gold.buy;
-      goldPrices[1].sellPrice = apiData.gold.sell;
-      goldPrices[1].diff = '100';
-    }
-
-  } catch (error) {
-    console.error("Failed to fetch gold prices:", error);
-  }
   return (
     <main className="relative min-h-screen w-full bg-[#0f172a] overflow-x-hidden flex flex-col font-sans-thai">
-      {/* Settings Button */}
-      <Link
-        href="/edit"
-        className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 p-2 sm:p-4 glass rounded-xl sm:rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"
-        title="ตั้งค่า"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-      </Link>
+      {/* Settings Button & API Status */}
+      <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
+        <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border glass ${
+            apiStatus === 'online' ? 'border-emerald-500/20 text-emerald-400' : 
+            apiStatus === 'loading' ? 'border-amber-500/20 text-amber-400' : 
+            'border-rose-500/20 text-rose-400'
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${
+              apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
+              apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' : 
+              'bg-rose-500'
+          }`} />
+          <span className="text-[10px] font-black uppercase tracking-tighter">
+            {apiStatus === 'online' ? 'API Online' : apiStatus === 'loading' ? 'Connecting' : 'Offline Mode'}
+          </span>
+        </div>
+        
+        <Link
+          href="/edit"
+          className="p-2 sm:p-4 glass rounded-xl sm:rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"
+          title="ตั้งค่า"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+        </Link>
+      </div>
 
       {/* Background Decorations */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
@@ -97,7 +109,7 @@ export default async function Home() {
         <div className="w-full xl:w-[35%] 2xl:w-[30%] flex flex-col gap-6 md:gap-8 lg:gap-10">
           <Header />
           <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
-            {goldPrices.map((price, index) => (
+            {displayGoldPrices.map((price, index) => (
               <GoldPriceCard key={index} {...price} />
             ))}
           </div>

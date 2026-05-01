@@ -80,54 +80,42 @@ export default async function Home() {
       {/* Settings Button */}
       <Link
         href="/edit"
-        className="absolute top-8 right-8 z-50 p-4 glass rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"
+        className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 p-2 sm:p-4 glass rounded-xl sm:rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"
         title="ตั้งค่า"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
       </Link>
 
       {/* Background Decorations */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
 
-      {/* Main Content Area: 30/70 Split */}
-      <div className="flex-1 flex flex-col lg:flex-row w-full p-6 lg:p-8 gap-6 lg:gap-8">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col xl:flex-row w-full p-4 md:p-6 lg:p-8 xl:p-12 gap-6 md:gap-8 xl:gap-12">
 
-        {/* Left Column: 30% on LG screens - Gold Prices */}
-        <div className="w-full lg:w-[30%] flex flex-col gap-8">
+        {/* Left Column: Gold Prices */}
+        <div className="w-full xl:w-[35%] 2xl:w-[30%] flex flex-col gap-6 md:gap-8 lg:gap-10">
           <Header />
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
             {goldPrices.map((price, index) => (
               <GoldPriceCard key={index} {...price} />
             ))}
           </div>
-
-          {/* Small Stats */}
-          {/* <div className="grid grid-cols-2 gap-4 mt-4 lg:mt-auto">
-            <div className="glass p-6 rounded-3xl">
-              <p className="text-xl text-slate-500 font-bold mb-1 uppercase tracking-wider">Gold Spot</p>
-              <p className="text-3xl font-black text-white">$2,735.40</p>
-            </div>
-            <div className="glass p-6 rounded-3xl">
-              <p className="text-xl text-slate-500 font-bold mb-1 uppercase tracking-wider">THB/USD</p>
-              <p className="text-3xl font-black text-white">34.25</p>
-            </div>
-          </div> */}
         </div>
 
-        {/* Right Column: 70% on LG screens - Promo Slider */}
-        <div className="w-full lg:w-[70%] min-h-[500px] lg:h-auto">
+        {/* Right Column: Promo Slider */}
+        <div className="w-full xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-auto">
           <PromoSlider />
         </div>
       </div>
 
       {/* Scrolling Footer Marquee */}
-      <div className="h-20 lg:h-24 bg-amber-500/10 border-t border-amber-500/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
+      <div className="h-14 md:h-20 lg:h-24 2xl:h-32 bg-amber-500/10 border-t border-amber-500/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
         <div className="animate-marquee py-2">
-          <span className="text-2xl lg:text-4xl font-bold text-amber-500 mx-8 uppercase tracking-widest">
+          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-amber-500 mx-8 md:mx-12 uppercase tracking-widest">
             ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
           </span>
-          <span className="text-2xl lg:text-4xl font-bold text-amber-500 mx-8 uppercase tracking-widest">
+          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-amber-500 mx-8 md:mx-12 uppercase tracking-widest">
             ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
           </span>
         </div>

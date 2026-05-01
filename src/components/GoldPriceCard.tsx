@@ -11,7 +11,7 @@ interface GoldPriceCardProps {
 const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ title, buyPrice, sellPrice, diff, isUp }) => {
   return (
     <div className="glass p-5 md:p-8 2xl:p-12 rounded-[1.5rem] md:rounded-[2.5rem] transition-all duration-300 shadow-xl border-white/5">
-      <div className="flex justify-between items-center mb-6 md:mb-10">
+      {/* <div className="flex justify-between items-center mb-6 md:mb-10">
         <h3 className="text-xl md:text-3xl xl:text-4xl 2xl:text-6xl font-bold text-slate-100">{title}</h3>
         {diff && (
           <div className={`flex items-center gap-1 md:gap-2 px-3 py-1 md:px-5 md:py-2 rounded-full text-lg md:text-2xl 2xl:text-4xl font-bold ${isUp ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
@@ -23,7 +23,7 @@ const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ title, buyPrice, sellPric
             {diff}
           </div>
         )}
-      </div>
+      </div> */}
 
       <div className="space-y-6 md:space-y-12 2xl:space-y-16">
         <div className="space-y-2 md:space-y-4">

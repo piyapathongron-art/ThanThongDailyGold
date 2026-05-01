@@ -9,11 +9,11 @@ import Link from 'next/link';
 import { useGoldStore } from '@/store/useGoldStore';
 
 export default function Home() {
-  const { 
-    goldBarMode, 
-    goldOrnamentMode, 
-    manualData, 
-    apiData, 
+  const {
+    goldBarMode,
+    goldOrnamentMode,
+    manualData,
+    apiData,
     apiStatus,
     setApiData,
     setApiStatus
@@ -27,7 +27,7 @@ export default function Home() {
       setApiStatus('loading');
       try {
         const res = await getGoldPriceApi();
-        if (res.data && res.data.response) {
+        if (res.data && res.data.response && res.data.response.price) {
           setApiData(res.data.response);
         } else {
           setApiStatus('offline');
@@ -74,21 +74,19 @@ export default function Home() {
     <main className="relative min-h-screen w-full bg-[#0f172a] overflow-x-hidden flex flex-col font-sans-thai">
       {/* Settings Button & API Status */}
       <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
-        <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border glass ${
-            apiStatus === 'online' ? 'border-emerald-500/20 text-emerald-400' : 
-            apiStatus === 'loading' ? 'border-amber-500/20 text-amber-400' : 
-            'border-rose-500/20 text-rose-400'
-        }`}>
-          <div className={`w-2 h-2 rounded-full ${
-              apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
-              apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' : 
-              'bg-rose-500'
-          }`} />
+        {/* <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border glass ${apiStatus === 'online' ? 'border-emerald-500/20 text-emerald-400' :
+            apiStatus === 'loading' ? 'border-amber-500/20 text-amber-400' :
+              'border-rose-500/20 text-rose-400'
+          }`}>
+          <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+              apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' :
+                'bg-rose-500'
+            }`} />
           <span className="text-[10px] font-black uppercase tracking-tighter">
             {apiStatus === 'online' ? 'API Online' : apiStatus === 'loading' ? 'Connecting' : 'Offline Mode'}
           </span>
-        </div>
-        
+        </div> */}
+
         <Link
           href="/edit"
           className="p-2 sm:p-4 glass rounded-xl sm:rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"

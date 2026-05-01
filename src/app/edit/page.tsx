@@ -7,15 +7,15 @@ import { toast } from "sonner";
 import { useGoldStore } from '@/store/useGoldStore';
 
 export default function EditPage() {
-    const { 
-        goldBarMode, 
-        goldOrnamentMode, 
-        manualData, 
+    const {
+        goldBarMode,
+        goldOrnamentMode,
+        manualData,
         apiData,
         apiStatus,
-        setGoldBarMode, 
-        setGoldOrnamentMode, 
-        setManualData, 
+        setGoldBarMode,
+        setGoldOrnamentMode,
+        setManualData,
         setApiData,
         setApiStatus,
         syncApiToManual
@@ -30,8 +30,9 @@ export default function EditPage() {
             setApiStatus('loading');
             try {
                 const res = await getGoldPriceApi();
-                if (res.data && res.data.response) {
+                if (res.data && res.data.response && res.data.response.price) {
                     setApiData(res.data.response);
+                    setApiStatus('online');
                 } else {
                     setApiStatus('offline');
                 }
@@ -76,27 +77,25 @@ export default function EditPage() {
 
                 {/* API Status & Controls */}
                 <div className="flex flex-wrap items-center gap-4">
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
-                        apiStatus === 'online' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 
-                        apiStatus === 'loading' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 
-                        'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                    }`}>
-                        <div className={`w-2 h-2 rounded-full ${
-                            apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 
-                            apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' : 
-                            'bg-rose-500'
-                        }`} />
+                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${apiStatus === 'online' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                        apiStatus === 'loading' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                            'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                        }`}>
+                        <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
+                            apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' :
+                                'bg-rose-500'
+                            }`} />
                         <span className="text-sm font-bold uppercase tracking-wider">
                             API: {apiStatus === 'online' ? 'เชื่อมต่อแล้ว' : apiStatus === 'loading' ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อไม่ได้'}
                         </span>
                     </div>
 
-                    <button 
+                    <button
                         onClick={handleSync}
                         disabled={apiStatus !== 'online'}
                         className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-white/5 text-slate-300 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30 disabled:pointer-events-none"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
                         <span className="text-sm font-bold">ดึงราคา API ใส่ Manual</span>
                     </button>
                 </div>
@@ -116,14 +115,14 @@ export default function EditPage() {
                             <div className="flex flex-col items-start p-4 gap-2 sm:gap-3 bg-slate-900/40 rounded-2xl border border-white/5">
                                 <div className="text-slate-400 font-bold text-sm sm:text-base">ทองคำแท่ง:</div>
                                 <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                                    ซื้อ: <span className="text-amber-500">{apiData.price?.gold_bar?.buy}</span> <br /> 
+                                    ซื้อ: <span className="text-amber-500">{apiData.price?.gold_bar?.buy}</span> <br />
                                     ขาย: <span className="text-amber-500">{apiData.price?.gold_bar?.sell}</span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-start p-4 gap-2 sm:gap-3 bg-slate-900/40 rounded-2xl border border-white/5">
                                 <div className="text-slate-400 font-bold text-sm sm:text-base">ทองรูปพรรณ:</div>
                                 <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                                    ซื้อ: <span className="text-amber-500">{apiData.price?.gold?.buy}</span> <br /> 
+                                    ซื้อ: <span className="text-amber-500">{apiData.price?.gold?.buy}</span> <br />
                                     ขาย: <span className="text-amber-500">{apiData.price?.gold?.sell}</span>
                                 </div>
                             </div>
@@ -148,20 +147,20 @@ export default function EditPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาซื้อ</label>
-                                    <input 
-                                        type="text" 
-                                        value={manualData.goldBarBuy} 
-                                        onChange={(e) => setManualData({ goldBarBuy: e.target.value })} 
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none" 
+                                    <input
+                                        type="text"
+                                        value={manualData.goldBarBuy}
+                                        onChange={(e) => setManualData({ goldBarBuy: e.target.value })}
+                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาขาย</label>
-                                    <input 
-                                        type="text" 
-                                        value={manualData.goldBarSell} 
-                                        onChange={(e) => setManualData({ goldBarSell: e.target.value })} 
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none" 
+                                    <input
+                                        type="text"
+                                        value={manualData.goldBarSell}
+                                        onChange={(e) => setManualData({ goldBarSell: e.target.value })}
+                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                             </div>
@@ -182,20 +181,20 @@ export default function EditPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาซื้อ</label>
-                                    <input 
-                                        type="text" 
-                                        value={manualData.goldBuy} 
-                                        onChange={(e) => setManualData({ goldBuy: e.target.value })} 
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none" 
+                                    <input
+                                        type="text"
+                                        value={manualData.goldBuy}
+                                        onChange={(e) => setManualData({ goldBuy: e.target.value })}
+                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                                 <div>
                                     <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาขาย</label>
-                                    <input 
-                                        type="text" 
-                                        value={manualData.goldSell} 
-                                        onChange={(e) => setManualData({ goldSell: e.target.value })} 
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none" 
+                                    <input
+                                        type="text"
+                                        value={manualData.goldSell}
+                                        onChange={(e) => setManualData({ goldSell: e.target.value })}
+                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
                                     />
                                 </div>
                             </div>

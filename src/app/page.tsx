@@ -45,7 +45,7 @@ export default function Home() {
   }, [setApiData, setApiStatus]);
 
   if (!isHydrated) {
-    return <div className="min-h-screen bg-[#0f172a]" />; // Simple placeholder during hydration
+    return <div className="min-h-screen bg-background" />; // Simple placeholder during hydration
   }
 
   // Determine display modes with automatic fallback
@@ -65,7 +65,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="relative min-h-screen w-full bg-[#0f172a] overflow-x-hidden flex flex-col font-sans-thai">
+    <main className="relative min-h-screen w-full bg-background overflow-x-hidden flex flex-col font-sans-thai">
       {/* Settings Button & API Status */}
       <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
         {/* <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border glass ${apiStatus === 'online' ? 'border-emerald-500/20 text-emerald-400' :
@@ -92,7 +92,7 @@ export default function Home() {
 
       {/* Background Decorations */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-secondary/5 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-accent-red/5 blur-[100px] pointer-events-none" />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col xl:flex-row w-full p-4 md:p-6 lg:p-8 xl:p-12 gap-6 md:gap-8 xl:gap-12">

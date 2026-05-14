@@ -63,7 +63,7 @@ export default function EditPage() {
     if (!isHydrated) return null;
 
     return (
-        <main className="relative min-h-screen w-full bg-[#0f172a] overflow-x-hidden flex flex-col font-sans-thai p-4 sm:p-6 lg:p-12">
+        <main className="relative min-h-screen w-full bg-background overflow-x-hidden flex flex-col font-sans-thai p-4 sm:p-6 lg:p-12">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
 
             <div className="max-w-5xl mx-auto w-full space-y-6 sm:space-y-10 z-10">

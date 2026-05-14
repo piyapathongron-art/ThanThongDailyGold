@@ -22,7 +22,7 @@ export default function Home() {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setIsHydrated(true);
+    setTimeout(() => setIsHydrated(true), 0);
     const fetchData = async () => {
       setApiStatus('loading');
       try {
@@ -42,7 +42,7 @@ export default function Home() {
     // Refresh every 5 minutes
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [setApiData, setApiStatus]);
 
   if (!isHydrated) {
     return <div className="min-h-screen bg-[#0f172a]" />; // Simple placeholder during hydration
@@ -55,18 +55,12 @@ export default function Home() {
   // Prepare price data for display
   const displayGoldPrices = [
     {
-      title: 'ทองคำแท่ง 96.5%',
       buyPrice: effectiveBarMode === 'manual' ? manualData.goldBarBuy : (apiData?.price?.gold_bar?.buy || 'รอข้อมูล...'),
       sellPrice: effectiveBarMode === 'manual' ? manualData.goldBarSell : (apiData?.price?.gold_bar?.sell || 'รอข้อมูล...'),
-      diff: effectiveBarMode === 'manual' ? 'Manual' : (apiStatus === 'offline' ? 'Offline' : 'API'),
-      isUp: true,
     },
     {
-      title: 'ทองรูปพรรณ 96.5%',
       buyPrice: effectiveOrnamentMode === 'manual' ? manualData.goldBuy : (apiData?.price?.gold?.buy || 'รอข้อมูล...'),
       sellPrice: effectiveOrnamentMode === 'manual' ? manualData.goldSell : (apiData?.price?.gold?.sell || 'รอข้อมูล...'),
-      diff: effectiveOrnamentMode === 'manual' ? 'Manual' : (apiStatus === 'offline' ? 'Offline' : 'API'),
-      isUp: true,
     },
   ];
 
@@ -97,8 +91,8 @@ export default function Home() {
       </div>
 
       {/* Background Decorations */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-amber-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-secondary/5 blur-[100px] pointer-events-none" />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col xl:flex-row w-full p-4 md:p-6 lg:p-8 xl:p-12 gap-6 md:gap-8 xl:gap-12">
@@ -120,12 +114,12 @@ export default function Home() {
       </div>
 
       {/* Scrolling Footer Marquee */}
-      <div className="h-14 md:h-20 lg:h-24 2xl:h-32 bg-amber-500/10 border-t border-amber-500/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
+      <div className="h-14 md:h-20 lg:h-24 2xl:h-32 bg-accent-red/30 border-t border-primary/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
         <div className="animate-marquee py-2">
-          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-amber-500 mx-8 md:mx-12 uppercase tracking-widest">
+          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-primary mx-8 md:mx-12 uppercase tracking-widest">
             ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
           </span>
-          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-amber-500 mx-8 md:mx-12 uppercase tracking-widest">
+          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-primary mx-8 md:mx-12 uppercase tracking-widest">
             ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
           </span>
         </div>

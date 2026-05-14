@@ -14,6 +14,8 @@
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-accent-red: var(--accent-red);
+  --color-card-label: #cbd5e1;
+  --color-card-separator: color-mix(in srgb, white 20%, transparent);
   --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui;
   --font-sans-thai: var(--font-ibm-plex-sans-thai), ui-sans-serif, system-ui;
 }

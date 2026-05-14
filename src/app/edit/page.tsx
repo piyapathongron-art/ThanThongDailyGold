@@ -25,7 +25,7 @@ export default function EditPage() {
     const [isHydrated, setIsHydrated] = useState(false);
 
     useEffect(() => {
-        setIsHydrated(true);
+        setTimeout(() => setIsHydrated(true), 0);
         const fetchData = async () => {
             setApiStatus('loading');
             try {
@@ -45,7 +45,7 @@ export default function EditPage() {
         };
 
         fetchData();
-    }, []);
+    }, [setApiData, setApiStatus]);
 
     const handleSave = () => {
         toast.success("บันทึกการตั้งค่าเรียบร้อยแล้ว!");

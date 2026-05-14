@@ -66,7 +66,7 @@ export default function RootLayout({
           theme="dark"
           toastOptions={{
             classNames: {
-              toast: "text-gray-100 border-gray-700 bg-[#1a202c]/90 backdrop-blur-md shadow-lg",
+              toast: "text-gray-100 border-gray-700 bg-background/90 backdrop-blur-md shadow-lg",
               title: "text-white",
               description: "text-gray-300",
               success: "border-green-500/30 bg-green-500/5",

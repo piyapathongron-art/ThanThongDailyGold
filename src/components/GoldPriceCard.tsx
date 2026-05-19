@@ -1,13 +1,15 @@
 import React from 'react';
 
 interface GoldPriceCardProps {
+  title: string;
   buyPrice: string;
   sellPrice: string;
 }
 
-const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ buyPrice, sellPrice }) => {
+const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ title, buyPrice, sellPrice }) => {
   return (
     <div className="glass p-5 md:p-8 2xl:p-12 rounded-[1.5rem] md:rounded-[2.5rem] transition-all duration-300 shadow-xl border-white/5">
+      <p className="text-xs md:text-base 2xl:text-2xl uppercase tracking-[0.25em] text-card-label font-bold mb-4 md:mb-6 2xl:mb-8">{title}</p>
       <div className="space-y-6 md:space-y-12 2xl:space-y-16">
         <div className="space-y-2 md:space-y-4">
           <div className="flex justify-between items-baseline">

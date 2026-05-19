@@ -55,10 +55,12 @@ export default function Home() {
   // Prepare price data for display
   const displayGoldPrices = [
     {
+      title: 'ทองคำแท่ง 96.5%',
       buyPrice: effectiveBarMode === 'manual' ? manualData.goldBarBuy : (apiData?.price?.gold_bar?.buy || 'รอข้อมูล...'),
       sellPrice: effectiveBarMode === 'manual' ? manualData.goldBarSell : (apiData?.price?.gold_bar?.sell || 'รอข้อมูล...'),
     },
     {
+      title: 'ทองรูปพรรณ 96.5%',
       buyPrice: effectiveOrnamentMode === 'manual' ? manualData.goldBuy : (apiData?.price?.gold?.buy || 'รอข้อมูล...'),
       sellPrice: effectiveOrnamentMode === 'manual' ? manualData.goldSell : (apiData?.price?.gold?.sell || 'รอข้อมูล...'),
     },

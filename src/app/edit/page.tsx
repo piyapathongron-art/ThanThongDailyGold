@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { getGoldPriceApi } from "@/api/mainApi";
 import { toast } from "sonner";
@@ -13,13 +13,17 @@ export default function EditPage() {
         manualData,
         apiData,
         apiStatus,
+        promoImages,
         setGoldBarMode,
         setGoldOrnamentMode,
         setManualData,
         setApiData,
         setApiStatus,
-        syncApiToManual
+        syncApiToManual,
+        setPromoImage,
     } = useGoldStore();
+
+    const fileInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
 
     const [loading, setLoading] = useState(!apiData);
     const [isHydrated, setIsHydrated] = useState(false);
@@ -49,6 +53,26 @@ export default function EditPage() {
 
     const handleSave = () => {
         toast.success("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
+    };
+
+    const handleImageUpload = (index: number, file: File) => {
+        if (!file.type.startsWith('image/')) {
+            toast.error("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target?.result as string;
+            setPromoImage(index, dataUrl);
+            toast.success(`อัปโหลดรูปโปรโมชั่น ${index + 1} เรียบร้อยแล้ว`);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleClearImage = (index: number) => {
+        setPromoImage(index, '');
+        if (fileInputRefs[index].current) fileInputRefs[index].current.value = '';
+        toast.success(`ลบรูปโปรโมชั่น ${index + 1} แล้ว`);
     };
 
     const handleSync = () => {
@@ -199,6 +223,58 @@ export default function EditPage() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Promo Image Upload */}
+                <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-white/5">
+                    <h2 className="text-lg sm:text-xl font-bold text-white mb-6">รูปโปรโมชั่น</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {[0, 1, 2].map((index) => (
+                            <div key={index} className="flex flex-col gap-3">
+                                <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-800/50 border border-white/10 flex items-center justify-center">
+                                    {promoImages[index] ? (
+                                        <>
+                                            <img
+                                                src={promoImages[index]}
+                                                alt={`Promotion ${index + 1}`}
+                                                className="absolute inset-0 w-full h-full object-cover"
+                                            />
+                                            <button
+                                                onClick={() => handleClearImage(index)}
+                                                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-rose-500/80 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
+                                                aria-label="ลบรูป"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-2 text-slate-500">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                            <span className="text-xs">ยังไม่มีรูป</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-slate-400 text-sm font-bold text-center">โปรโมชั่น {index + 1}</p>
+                                <input
+                                    ref={fileInputRefs[index]}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleImageUpload(index, file);
+                                    }}
+                                />
+                                <button
+                                    onClick={() => fileInputRefs[index].current?.click()}
+                                    className="w-full py-2.5 rounded-xl bg-slate-800/50 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-700 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                    {promoImages[index] ? 'เปลี่ยนรูป' : 'อัปโหลดรูป'}
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 </div>
 

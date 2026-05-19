@@ -23,12 +23,14 @@ interface GoldState {
   manualData: GoldData;
   apiData: ApiData | null;
   apiStatus: 'online' | 'offline' | 'loading';
+  promoImages: string[];
   setGoldBarMode: (mode: 'api' | 'manual') => void;
   setGoldOrnamentMode: (mode: 'api' | 'manual') => void;
   setManualData: (data: Partial<GoldData>) => void;
   setApiData: (data: ApiData) => void;
   setApiStatus: (status: 'online' | 'offline' | 'loading') => void;
   syncApiToManual: () => void;
+  setPromoImage: (index: number, dataUrl: string) => void;
 }
 
 export const useGoldStore = create<GoldState>()(
@@ -44,6 +46,7 @@ export const useGoldStore = create<GoldState>()(
       },
       apiData: null,
       apiStatus: 'loading',
+      promoImages: ['', '', ''],
       setGoldBarMode: (mode) => set({ goldBarMode: mode }),
       setGoldOrnamentMode: (mode) => set({ goldOrnamentMode: mode }),
       setManualData: (data) =>
@@ -52,6 +55,12 @@ export const useGoldStore = create<GoldState>()(
         })),
       setApiData: (data) => set({ apiData: data, apiStatus: 'online' }),
       setApiStatus: (status) => set({ apiStatus: status }),
+      setPromoImage: (index, dataUrl) =>
+        set((state) => {
+          const updated = [...state.promoImages];
+          updated[index] = dataUrl;
+          return { promoImages: updated };
+        }),
       syncApiToManual: () => {
         const { apiData } = get();
         if (apiData?.price) {

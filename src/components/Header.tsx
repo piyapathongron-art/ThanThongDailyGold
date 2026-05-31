@@ -21,13 +21,13 @@ const Header = () => {
           alt="Logo" 
           className="w-20 h-20 md:w-32 md:h-32 xl:w-40 xl:h-40 2xl:w-56 2xl:h-56 rounded-2xl md:rounded-3xl object-cover shadow-2xl" 
         />
-        <h1 className="text-3xl md:text-5xl xl:text-6xl 2xl:text-8xl font-bold tracking-tight text-white">
-          Than<span className="gold-gradient-text">Thong</span>
+        <h1 className="text-3xl md:text-5xl xl:text-6xl 2xl:text-[200px] font-bold tracking-tight text-white">
+          ห้างทอง<span className="gold-gradient-text">ธารทอง</span>
         </h1>
       </div>
 
       <div className="space-y-2 md:space-y-3 xl:space-y-5">
-        <p className="text-3xl md:text-5xl xl:text-6xl 2xl:text-8xl font-bold text-white tracking-wide">
+        <p className="text-3xl md:text-5xl xl:text-6xl 2xl:text-[120px] font-bold text-white tracking-wide">
           ราคาทองคำวันนี้
         </p>
         <div className="flex flex-col items-center gap-1 md:gap-2 xl:gap-4 text-slate-300">

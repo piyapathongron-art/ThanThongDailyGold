@@ -20,10 +20,11 @@ export default function Home() {
   } = useGoldStore();
 
   const [isHydrated, setIsHydrated] = useState(false);
-  const [isRotated, setIsRotated] = useState(false);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    setIsRotated(localStorage.getItem('gold-rotated') === 'true');
+    const savedRotation = Number(localStorage.getItem('gold-rotation')) || 0;
+    setRotation(savedRotation);
     setTimeout(() => setIsHydrated(true), 0);
     const fetchData = async () => {
       setApiStatus('loading');
@@ -70,31 +71,44 @@ export default function Home() {
     },
   ];
 
+  // 90/270 swap width and height to fill the physical screen; 180 stays landscape, just flipped.
+  const isPortrait = rotation === 90 || rotation === 270;
+  const rotationStyle = rotation === 0 ? undefined : {
+    transform: `rotate(${rotation}deg)`,
+    transformOrigin: 'center center',
+    position: 'fixed' as const,
+    ...(isPortrait ? {
+      width: '100vh',
+      height: '100vw',
+      top: '50%',
+      left: '50%',
+      marginTop: '-50vw',
+      marginLeft: '-50vh',
+    } : {
+      width: '100vw',
+      height: '100vh',
+      top: '50%',
+      left: '50%',
+      marginTop: '-50vh',
+      marginLeft: '-50vw',
+    }),
+  };
+
   return (
     <main
       className="relative min-h-screen xl:h-screen xl:overflow-hidden w-full bg-background overflow-x-hidden flex flex-col font-sans-thai"
-      style={isRotated ? {
-        transform: 'rotate(90deg)',
-        transformOrigin: 'center center',
-        width: '100vh',
-        height: '100vw',
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        marginTop: '-50vw',
-        marginLeft: '-50vh',
-      } : undefined}
+      style={rotationStyle}
     >
       {/* Settings Button & API Status */}
       <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
         <button
           onClick={() => {
-            const next = !isRotated;
-            setIsRotated(next);
-            localStorage.setItem('gold-rotated', String(next));
+            const next = ((rotation + 90) % 360) as 0 | 90 | 180 | 270;
+            setRotation(next);
+            localStorage.setItem('gold-rotation', String(next));
           }}
           className="p-2 sm:p-4 glass rounded-xl sm:rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"
-          title="หมุนจอ"
+          title={`หมุนจอ (${rotation}°)`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6" /><path d="M2.5 22v-6h6" /><path d="M2 11.5a10 10 0 0 1 18.8-4.3" /><path d="M22 12.5a10 10 0 0 1-18.8 4.2" /></svg>
         </button>
@@ -126,12 +140,12 @@ export default function Home() {
       <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-accent-red/5 blur-[100px] pointer-events-none" />
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex w-full p-4 md:p-6 lg:p-8 xl:p-8 2xl:p-10 gap-6 md:gap-8 xl:gap-8 2xl:gap-10 ${isRotated ? 'flex-col h-[calc(100vh-2rem)] overflow-hidden' : 'flex-col xl:flex-row xl:h-[calc(100vh-6rem)] 2xl:h-[calc(100vh-8rem)] xl:overflow-hidden'}`}>
+      <div className={`flex-1 flex w-full p-4 md:p-6 lg:p-8 xl:p-8 2xl:p-10 gap-6 md:gap-8 xl:gap-8 2xl:gap-10 ${isPortrait ? 'flex-col h-[calc(100vh-2rem)] overflow-hidden' : 'flex-col xl:flex-row xl:h-[calc(100vh-6rem)] 2xl:h-[calc(100vh-8rem)] xl:overflow-hidden'}`}>
 
         {/* Gold Prices */}
-        <div className={`w-full flex flex-col gap-6 md:gap-8 ${isRotated ? '' : 'xl:w-[45%] 2xl:w-[42%] xl:h-full xl:justify-between xl:gap-6'}`}>
+        <div className={`w-full flex flex-col gap-6 md:gap-8 ${isPortrait ? '' : 'xl:w-[45%] 2xl:w-[42%] xl:h-full xl:justify-between xl:gap-6'}`}>
           <Header />
-          <div className={`flex flex-col gap-4 md:gap-6 mt-2 xl:mt-0 ${isRotated ? '' : 'xl:flex-1 xl:justify-center xl:gap-4 2xl:gap-6'}`}>
+          <div className={`flex flex-col gap-4 md:gap-6 mt-2 xl:mt-0 ${isPortrait ? '' : 'xl:flex-1 xl:justify-center xl:gap-4 2xl:gap-6'}`}>
             {displayGoldPrices.map((price, index) => (
               <GoldPriceCard key={index} {...price} />
             ))}
@@ -139,7 +153,7 @@ export default function Home() {
         </div>
 
         {/* Promo Slider */}
-        <div className={`w-full border-8 rounded-4xl border-primary ${isRotated ? 'flex-1 min-h-0' : 'xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-full xl:min-h-0'}`}>
+        <div className={`w-full border-8 rounded-4xl border-primary ${isPortrait ? 'flex-1 min-h-0' : 'xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-full xl:min-h-0'}`}>
           <PromoSlider />
         </div>
       </div>

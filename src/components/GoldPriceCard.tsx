@@ -7,34 +7,41 @@ interface GoldPriceCardProps {
 }
 
 const GoldPriceCard: React.FC<GoldPriceCardProps> = ({ title, buyPrice, sellPrice }) => {
+  const isGoldBar = title === 'ทองคำแท่ง 96.5%';
+
   return (
-    <div className="glass p-5 md:p-8 2xl:p-12 rounded-[1.5rem] md:rounded-[2.5rem] transition-all duration-300 shadow-xl border-white/5">
-      <p className="text-xs md:text-base 2xl:text-[140px] uppercase  text-white font-bold mb-4 md:mb-6 2xl:mb-8">{title}</p>
-      <div className="space-y-6 md:space-y-12 2xl:space-y-16">
-        
-         <div className="space-y-2 md:space-y-4">
-          <div className="flex justify-between items-baseline">
-            {/* <p className="text-base md:text-2xl xl:text-3xl 2xl:text-5xl text-white font-bold">บาทละ</p> */}
-          </div>
+    <div className="glass p-5 md:p-6 xl:p-5 2xl:p-6 rounded-2xl md:rounded-3xl transition-all duration-300 shadow-2xl border border-primary/10 flex flex-col justify-center">
+      {/* Title */}
+      <h2 className="text-xl md:text-2xl xl:text-[1.65rem] 2xl:text-[2.15rem] font-bold text-white tracking-wide mb-3 xl:mb-2 2xl:mb-4 border-l-4 border-secondary pl-3">
+        {title}
+      </h2>
 
-          {title === 'ทองคำแท่ง 96.5%' &&<div className="flex items-baseline justify-between gap-2 md:gap-4">
-            <p className="text-sm md:text-xl xl:text-2xl 2xl:text-[180px] text-white font-bold">ขายออก</p>
-            <span className="text-5xl md:text-7xl xl:text-8xl 2xl:text-[12rem] leading-none font-black gold-gradient-text tracking-tighter">{sellPrice}</span>
-          </div>}
-        </div>
-
-        
-
-       
-      
-      <div className="space-y-2 md:space-y-4">
-          <div className="flex justify-between items-baseline">
-            {/* <p className="text-base md:text-2xl xl:text-3xl 2xl:text-5xl text-card-label font-bold">บาทละ</p> */}
+      <div className="flex flex-col justify-center gap-2 xl:gap-1 2xl:gap-2">
+        {/* Sell Row (Only for Gold Bar) */}
+        {isGoldBar && (
+          <div className="flex items-center justify-between w-full">
+            <span className="text-lg md:text-2xl xl:text-xl 2xl:text-[80px] font-black text-slate-300">
+              ขายออก
+            </span>
+            <span className="text-5xl md:text-7xl xl:text-[4rem] 2xl:text-[5.5rem] font-black gold-gradient-text tracking-tighter leading-none tabular-nums">
+              {sellPrice}
+            </span>
           </div>
-          <div className="flex items-baseline justify-between gap-2 md:gap-4">
-            <p className="text-sm md:text-xl xl:text-2xl 2xl:text-[180px] uppercase  text-card-label font-bold">ซื้อเข้า</p>
-            <span className="text-5xl md:text-7xl xl:text-8xl 2xl:text-[12rem] leading-none font-black gold-gradient-text tracking-tighter">{buyPrice}</span>
-          </div>
+        )}
+
+        {/* Dynamic Divider (Only for Gold Bar) */}
+        {isGoldBar && (
+          <div className="h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent my-2 xl:my-1.5 2xl:my-2.5" />
+        )}
+
+        {/* Buy Row */}
+        <div className="flex items-center justify-between w-full">
+          <span className="text-lg md:text-2xl xl:text-xl 2xl:text-[80px] font-black text-card-label">
+            ซื้อเข้า
+          </span>
+          <span className="text-5xl md:text-7xl xl:text-[4rem] 2xl:text-[5.5rem] font-black gold-gradient-text tracking-tighter leading-none tabular-nums">
+            {buyPrice}
+          </span>
         </div>
       </div>
     </div>

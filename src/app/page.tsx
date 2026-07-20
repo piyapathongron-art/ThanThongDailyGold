@@ -20,8 +20,10 @@ export default function Home() {
   } = useGoldStore();
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isRotated, setIsRotated] = useState(false);
 
   useEffect(() => {
+    setIsRotated(localStorage.getItem('gold-rotated') === 'true');
     setTimeout(() => setIsHydrated(true), 0);
     const fetchData = async () => {
       setApiStatus('loading');
@@ -43,6 +45,8 @@ export default function Home() {
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [setApiData, setApiStatus]);
+
+  console.log(apiData);
 
   if (!isHydrated) {
     return <div className="min-h-screen bg-background" />; // Simple placeholder during hydration
@@ -67,9 +71,34 @@ export default function Home() {
   ];
 
   return (
-    <main className="relative min-h-screen w-full bg-background overflow-x-hidden flex flex-col font-sans-thai">
+    <main
+      className="relative min-h-screen xl:h-screen xl:overflow-hidden w-full bg-background overflow-x-hidden flex flex-col font-sans-thai"
+      style={isRotated ? {
+        transform: 'rotate(90deg)',
+        transformOrigin: 'center center',
+        width: '100vh',
+        height: '100vw',
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        marginTop: '-50vw',
+        marginLeft: '-50vh',
+      } : undefined}
+    >
       {/* Settings Button & API Status */}
       <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
+        <button
+          onClick={() => {
+            const next = !isRotated;
+            setIsRotated(next);
+            localStorage.setItem('gold-rotated', String(next));
+          }}
+          className="p-2 sm:p-4 glass rounded-xl sm:rounded-2xl text-slate-400 hover:text-white hover:scale-110 transition-all border-white/5"
+          title="หมุนจอ"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6" /><path d="M2.5 22v-6h6" /><path d="M2 11.5a10 10 0 0 1 18.8-4.3" /><path d="M22 12.5a10 10 0 0 1-18.8 4.2" /></svg>
+        </button>
+
         {/* <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border glass ${apiStatus === 'online' ? 'border-emerald-500/20 text-emerald-400' :
             apiStatus === 'loading' ? 'border-amber-500/20 text-amber-400' :
               'border-rose-500/20 text-rose-400'
@@ -97,26 +126,26 @@ export default function Home() {
       <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-accent-red/5 blur-[100px] pointer-events-none" />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col xl:flex-row w-full p-4 md:p-6 lg:p-8 xl:p-12 gap-6 md:gap-8 xl:gap-12">
+      <div className={`flex-1 flex w-full p-4 md:p-6 lg:p-8 xl:p-8 2xl:p-10 gap-6 md:gap-8 xl:gap-8 2xl:gap-10 ${isRotated ? 'flex-col h-[calc(100vh-2rem)] overflow-hidden' : 'flex-col xl:flex-row xl:h-[calc(100vh-6rem)] 2xl:h-[calc(100vh-8rem)] xl:overflow-hidden'}`}>
 
-        {/* Left Column: Gold Prices */}
-        <div className="w-full xl:w-[35%] 2xl:w-[30%] flex flex-col gap-6 md:gap-8 lg:gap-10">
+        {/* Gold Prices */}
+        <div className={`w-full flex flex-col gap-6 md:gap-8 ${isRotated ? '' : 'xl:w-[45%] 2xl:w-[42%] xl:h-full xl:justify-between xl:gap-6'}`}>
           <Header />
-          <div className="flex flex-col gap-4 md:gap-6 lg:gap-8">
+          <div className={`flex flex-col gap-4 md:gap-6 mt-2 xl:mt-0 ${isRotated ? '' : 'xl:flex-1 xl:justify-center xl:gap-4 2xl:gap-6'}`}>
             {displayGoldPrices.map((price, index) => (
               <GoldPriceCard key={index} {...price} />
             ))}
           </div>
         </div>
 
-        {/* Right Column: Promo Slider */}
-        <div className="w-full xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-auto">
+        {/* Promo Slider */}
+        <div className={`w-full border-8 rounded-4xl border-primary ${isRotated ? 'flex-1 min-h-0' : 'xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-full xl:min-h-0'}`}>
           <PromoSlider />
         </div>
       </div>
 
       {/* Scrolling Footer Marquee */}
-      <div className="h-14 md:h-20 lg:h-24 2xl:h-32 bg-accent-red/30 border-t border-primary/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
+      {/* <div className="h-14 md:h-20 lg:h-24 2xl:h-32 bg-accent-red/30 border-t border-primary/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
         <div className="animate-marquee py-2">
           <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-primary mx-8 md:mx-12 uppercase tracking-widest">
             ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
@@ -125,7 +154,7 @@ export default function Home() {
             ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
           </span>
         </div>
-      </div>
+      </div> */}
     </main>
   );
 }

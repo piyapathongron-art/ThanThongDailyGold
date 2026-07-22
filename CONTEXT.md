@@ -20,18 +20,24 @@
 ระวังสลับ: ในโค้ด `price.gold_bar.buy` = ราคาที่ร้าน**รับซื้อ**
 
 ### Mode (`api` | `manual`)
-ที่มาของราคาสำหรับสินค้าหนึ่งชนิด `api` = ตามราคาตลาด `manual` = ราคาที่พนักงานกรอกเอง
-เมื่อ **Price Source** ล่มทั้งหมด ทั้งสองชนิดถูกบังคับลงเป็น `manual` อัตโนมัติ
+ที่มาของราคา **มีเฉพาะ Gold Bar เท่านั้น** `api` = ตามราคาตลาด `manual` = พนักงานกรอกเอง
+เมื่อ **Price Source** ล่ม จะถูกบังคับลงเป็น `manual` อัตโนมัติ
+
+**Gold Ornament ไม่มี Mode** — เป็นราคาที่พนักงานกรอกเองเสมอ ดู [ADR 0002](docs/adr/0002-gold-price-source.md)
 
 ### Price Source
-แหล่งราคาตลาด มีสองชั้นตามลำดับ:
-1. **Primary** — `api.chnwt.dev` JSON API
-2. **Fallback** — scrape `classic.goldtraders.or.th` (เว็บเก่าเรนเดอร์ราคาฝั่ง server เว็บใหม่ไม่เรนเดอร์)
+`thaigold.info/RealTimeDataV2/gtdata_.txt` — feed ที่เผยแพร่ให้เครื่องอ่าน
+แถวชื่อ `สมาคมฯ` คือราคาทองคำแท่งของสมาคม `bid` = ซื้อเข้า `ask` = ขายออก
 
-ทั้งสองชั้นล่ม → `apiStatus = 'offline'`
+**แหล่งเดิมสองชั้นตายทั้งคู่ อย่าพยายามกลับไปใช้:**
+- `classic.goldtraders.or.th` — Cloudflare ตอบ **403** ให้ IP ดาต้าเซ็นเตอร์ ทดสอบแล้วทั้ง iad1 และ sin1
+- `api.chnwt.dev` — คือ [max180643/thai-gold-api](https://github.com/max180643/thai-gold-api)
+  ซึ่ง scrape หน้าเดียวกันด้วย cheerio โดน Cloudflare ส่งหน้า challenge กลับมาพร้อม
+  status **200** โค้ดเลยผ่านด่านตรวจ status แต่หา selector ไม่เจอ → คืน `success` พร้อมราคาว่าง
+  **เปิด repo นั้นเองไม่ช่วย** ตัวบล็อกคือ IP ไม่ใช่โค้ด
 
-**Fallback มีกับดัก:** เว็บ goldtraders ใส่สีตามทิศทางราคา — `color="Green"` เมื่อราคาขึ้น
-`color="Red"` เมื่อราคาลง regex ที่ผูกกับสีใดสีหนึ่งจะพังครึ่งหนึ่งของวันทำการ
+Feed นี้ไม่มีเวลาประกาศราคาของแถว `สมาคมฯ` มีแต่นาฬิกา refresh ของตัว feed เอง
+จอจึงไม่แสดงเวลาอัปเดต ดีกว่าแสดงเวลาที่หมายถึงอย่างอื่น
 
 ### Display Settings
 ชุด state ที่ Display Board กับ Dashboard ต้องเห็นตรงกัน: Mode ทั้งสอง, ราคา manual,

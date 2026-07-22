@@ -8,9 +8,22 @@ const FALLBACK_URL = "https://classic.goldtraders.or.th/default.aspx";
 const isValidPrice = (data) =>
     Boolean(data?.price?.gold_bar?.buy && data?.price?.gold?.buy);
 
+// Both sources fail in ways that look identical from the outside — a blocked
+// request and a changed page both end as "no prices". The board runs unattended,
+// so the response has to name which one broke.
+class SourceError extends Error {
+    constructor(code, message) {
+        super(message);
+        this.name = "SourceError";
+        this.code = code;
+    }
+}
+
 async function fetchPrimary() {
     const res = await fetch(PRIMARY_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error("primary gold price API unavailable");
+    if (!res.ok) {
+        throw new SourceError(`primary_http_${res.status}`, "primary source rejected the request");
+    }
     const json = await res.json();
     return json?.response;
 }
@@ -27,7 +40,9 @@ async function fetchFallback() {
             "Accept-Language": "th,en-US;q=0.9",
         },
     });
-    if (!res.ok) throw new Error("fallback gold price source unavailable");
+    if (!res.ok) {
+        throw new SourceError(`fallback_http_${res.status}`, "fallback source rejected the request");
+    }
     const html = await res.text();
 
     // Font colour tracks price direction (Red down, Green up), so it must not be
@@ -45,7 +60,10 @@ async function fetchFallback() {
     const goldBuy = extract("lblOMBuy");
 
     if (!goldBarBuy || !goldBarSell || !goldBuy || !goldSell) {
-        throw new Error("failed to parse fallback gold price page");
+        throw new SourceError(
+            "fallback_parse_failed",
+            `fallback page did not contain prices (${html.length} bytes)`
+        );
     }
 
     const asTime = html.match(/lblAsTime"><b><font size="3">([^<]+)</)?.[1] || "";
@@ -62,13 +80,20 @@ async function fetchFallback() {
     };
 }
 
+const failureCode = (error, fallbackCode) =>
+    error.code ?? error.cause?.code ?? fallbackCode;
+
 export async function GET() {
+    let primaryFailure;
     try {
         const primary = await fetchPrimary();
         if (isValidPrice(primary)) {
             return NextResponse.json({ status: "success", response: primary });
         }
+        // Answers 200 with every price field empty rather than erroring.
+        primaryFailure = "primary_blank";
     } catch (error) {
+        primaryFailure = failureCode(error, "primary_unreachable");
         console.error("Primary gold price source failed:", error);
     }
 
@@ -78,7 +103,14 @@ export async function GET() {
     } catch (error) {
         console.error("Fallback gold price source failed:", error);
         return NextResponse.json(
-            { status: "error", response: null },
+            {
+                status: "error",
+                response: null,
+                error: {
+                    code: failureCode(error, "fallback_unreachable"),
+                    message: `${error.message} (primary: ${primaryFailure})`,
+                },
+            },
             { status: 502 }
         );
     }

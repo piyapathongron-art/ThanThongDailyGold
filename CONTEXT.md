@@ -40,8 +40,14 @@ Feed นี้ไม่มีเวลาประกาศราคาของ
 จอจึงไม่แสดงเวลาอัปเดต ดีกว่าแสดงเวลาที่หมายถึงอย่างอื่น
 
 ### Display Settings
-ชุด state ที่ Display Board กับ Dashboard ต้องเห็นตรงกัน: Mode ทั้งสอง, ราคา manual,
-Promo Slides, และ `poll_seconds` **เก็บฝั่ง server** ไม่ใช่ต่อเบราว์เซอร์
+ชุด state ที่ Display Board กับ Dashboard ต้องเห็นตรงกัน: Mode ของทองคำแท่ง, ราคาที่กรอกเอง,
+Promo Slides, และ `poll_seconds`
+
+เก็บเป็น **แถวเดียว** ใน Postgres บน Supabase (โปรเจกต์ `bihgcdceovfettoxmgme`)
+ไม่ใช่ localStorage อีกต่อไป — localStorage ผูกกับเบราว์เซอร์ ไม่ใช่ URL คอมกับทีวีจึงไม่มีวัน
+ตรงกันได้เลยไม่ว่าเปิดลิงก์เดียวกันแค่ไหน ดู [ADR 0001](docs/adr/0001-server-side-display-settings.md)
+
+Display Board **poll** แถวนี้ทุก `poll_seconds` วินาที การเขียนต้องมี `EDIT_PASSWORD`
 
 ### Promo Slide
 รูปโปรโมชั่นหนึ่งใบที่หมุนแสดงบน Display Board มีได้ 0–5 ใบ

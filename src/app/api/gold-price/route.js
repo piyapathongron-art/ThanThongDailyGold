@@ -23,8 +23,14 @@ async function fetchFallback() {
     if (!res.ok) throw new Error("fallback gold price source unavailable");
     const html = await res.text();
 
+    // Font colour tracks price direction (Red down, Green up), so it must not be
+    // part of the match or parsing breaks on every up day.
+    // Satang are dropped to match the primary API's whole-baht format, which the
+    // display board is laid out for.
     const extract = (id) =>
-        html.match(new RegExp(`${id}"><b><font color="Red">([\\d,.]+)`))?.[1];
+        html
+            .match(new RegExp(`${id}"><b><font[^>]*>([\\d,.]+)`))?.[1]
+            .replace(/\.\d+$/, "");
 
     const goldBarSell = extract("lblBLSell");
     const goldBarBuy = extract("lblBLBuy");

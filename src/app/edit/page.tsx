@@ -9,13 +9,11 @@ import { useGoldStore } from '@/store/useGoldStore';
 export default function EditPage() {
     const {
         goldBarMode,
-        goldOrnamentMode,
         manualData,
         apiData,
         apiStatus,
         promoImages,
         setGoldBarMode,
-        setGoldOrnamentMode,
         setManualData,
         setApiData,
         setApiStatus,
@@ -128,27 +126,15 @@ export default function EditPage() {
                 <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-amber-500/20 bg-amber-500/5">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
                         <h2 className="text-lg sm:text-xl font-bold text-amber-500 uppercase tracking-widest">ราคาตลาดปัจจุบัน (API Reference)</h2>
-                        <p className="text-slate-500 text-sm sm:text-xl sm:ml-auto">
-                            อัปเดตล่าสุด: {apiData?.update_date || '...'} {apiData?.update_time || ''}
-                        </p>
                     </div>
                     {loading && !apiData ? (
                         <p className="text-slate-500 animate-pulse text-lg sm:text-xl">กำลังดึงข้อมูลราคาล่าสุด...</p>
                     ) : apiData ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex flex-col items-start p-4 gap-2 sm:gap-3 bg-slate-900/40 rounded-2xl border border-white/5">
-                                <div className="text-slate-400 font-bold text-sm sm:text-base">ทองคำแท่ง:</div>
-                                <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                                    ซื้อ: <span className="text-amber-500">{apiData.price?.gold_bar?.buy}</span> <br />
-                                    ขาย: <span className="text-amber-500">{apiData.price?.gold_bar?.sell}</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-start p-4 gap-2 sm:gap-3 bg-slate-900/40 rounded-2xl border border-white/5">
-                                <div className="text-slate-400 font-bold text-sm sm:text-base">ทองรูปพรรณ:</div>
-                                <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                                    ซื้อ: <span className="text-amber-500">{apiData.price?.gold?.buy}</span> <br />
-                                    ขาย: <span className="text-amber-500">{apiData.price?.gold?.sell}</span>
-                                </div>
+                        <div className="flex flex-col items-start p-4 gap-2 sm:gap-3 bg-slate-900/40 rounded-2xl border border-white/5">
+                            <div className="text-slate-400 font-bold text-sm sm:text-base">ทองคำแท่ง:</div>
+                            <div className="text-xl sm:text-2xl font-black text-white leading-tight">
+                                ซื้อ: <span className="text-amber-500">{apiData.price?.gold_bar?.buy}</span> <br />
+                                ขาย: <span className="text-amber-500">{apiData.price?.gold_bar?.sell}</span>
                             </div>
                         </div>
                     ) : (
@@ -195,13 +181,10 @@ export default function EditPage() {
                     <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border-white/5 flex flex-col space-y-6 sm:space-y-8">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl sm:text-2xl font-bold text-white">ทองรูปพรรณ 96.5%</h3>
-                            <div className="flex p-1 bg-slate-900/50 rounded-xl border border-white/5">
-                                <button onClick={() => setGoldOrnamentMode('api')} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${goldOrnamentMode === 'api' ? 'bg-amber-500 text-slate-900' : 'text-slate-500'}`}>API</button>
-                                <button onClick={() => setGoldOrnamentMode('manual')} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${goldOrnamentMode === 'manual' ? 'bg-amber-500 text-slate-900' : 'text-slate-500'}`}>Manual</button>
-                            </div>
+                            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500">กรอกเอง</span>
                         </div>
 
-                        <div className={`space-y-4 transition-all duration-300 ${goldOrnamentMode === 'api' ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100'}`}>
+                        <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาซื้อ</label>

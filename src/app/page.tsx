@@ -11,7 +11,6 @@ import { useGoldStore } from '@/store/useGoldStore';
 export default function Home() {
   const {
     goldBarMode,
-    goldOrnamentMode,
     manualData,
     apiData,
     apiStatus,
@@ -55,10 +54,6 @@ export default function Home() {
 
   // Determine display modes with automatic fallback
   const effectiveBarMode = apiStatus === 'offline' ? 'manual' : goldBarMode;
-  const effectiveOrnamentMode = apiStatus === 'offline' ? 'manual' : goldOrnamentMode;
-
-  // The timestamp belongs to the API's prices, so it must not sit above staff overrides.
-  const isShowingApiPrices = effectiveBarMode === 'api' && effectiveOrnamentMode === 'api';
 
   // Prepare price data for display
   const displayGoldPrices = [
@@ -69,8 +64,8 @@ export default function Home() {
     },
     {
       title: 'ทองรูปพรรณ 96.5%',
-      buyPrice: effectiveOrnamentMode === 'manual' ? manualData.goldBuy : (apiData?.price?.gold?.buy || 'รอข้อมูล...'),
-      sellPrice: effectiveOrnamentMode === 'manual' ? manualData.goldSell : (apiData?.price?.gold?.sell || 'รอข้อมูล...'),
+      buyPrice: manualData.goldBuy,
+      sellPrice: manualData.goldSell,
     },
   ];
 
@@ -147,10 +142,7 @@ export default function Home() {
 
         {/* Gold Prices */}
         <div className={`w-full flex flex-col gap-6 md:gap-8 ${isPortrait ? '' : 'xl:w-[45%] 2xl:w-[42%] xl:h-full xl:justify-between xl:gap-6'}`}>
-          <Header
-            updateDate={isShowingApiPrices ? apiData?.update_date : undefined}
-            updateTime={isShowingApiPrices ? apiData?.update_time : undefined}
-          />
+          <Header />
           <div className={`flex flex-col gap-4 md:gap-6 mt-2 xl:mt-0 ${isPortrait ? '' : 'xl:flex-1 xl:justify-center xl:gap-4 2xl:gap-6'}`}>
             {displayGoldPrices.map((price, index) => (
               <GoldPriceCard key={index} {...price} />

@@ -8,24 +8,21 @@ interface GoldData {
   goldSell: string;
 }
 
+// Only gold bar has a machine-readable source. Ornament prices are announced as a
+// derivation the shop sets itself, so they are always staff-entered.
 interface ApiData {
   price?: {
     gold_bar?: { buy: string; sell: string };
-    gold?: { buy: string; sell: string };
   };
-  update_date?: string;
-  update_time?: string;
 }
 
 interface GoldState {
   goldBarMode: 'api' | 'manual';
-  goldOrnamentMode: 'api' | 'manual';
   manualData: GoldData;
   apiData: ApiData | null;
   apiStatus: 'online' | 'offline' | 'loading';
   promoImages: string[];
   setGoldBarMode: (mode: 'api' | 'manual') => void;
-  setGoldOrnamentMode: (mode: 'api' | 'manual') => void;
   setManualData: (data: Partial<GoldData>) => void;
   setApiData: (data: ApiData) => void;
   setApiStatus: (status: 'online' | 'offline' | 'loading') => void;
@@ -37,7 +34,6 @@ export const useGoldStore = create<GoldState>()(
   persist(
     (set, get) => ({
       goldBarMode: 'api',
-      goldOrnamentMode: 'api',
       manualData: {
         goldBarBuy: '44,200',
         goldBarSell: '44,300',
@@ -48,7 +44,6 @@ export const useGoldStore = create<GoldState>()(
       apiStatus: 'loading',
       promoImages: ['', '', ''],
       setGoldBarMode: (mode) => set({ goldBarMode: mode }),
-      setGoldOrnamentMode: (mode) => set({ goldOrnamentMode: mode }),
       setManualData: (data) =>
         set((state) => ({
           manualData: { ...state.manualData, ...data },
@@ -63,15 +58,11 @@ export const useGoldStore = create<GoldState>()(
         }),
       syncApiToManual: () => {
         const { apiData } = get();
-        if (apiData?.price) {
-          set({
-            manualData: {
-              goldBarBuy: apiData.price.gold_bar?.buy || '0',
-              goldBarSell: apiData.price.gold_bar?.sell || '0',
-              goldBuy: apiData.price.gold?.buy || '0',
-              goldSell: apiData.price.gold?.sell || '0',
-            }
-          });
+        const bar = apiData?.price?.gold_bar;
+        if (bar?.buy && bar?.sell) {
+          set((state) => ({
+            manualData: { ...state.manualData, goldBarBuy: bar.buy, goldBarSell: bar.sell },
+          }));
         }
       }
     }),

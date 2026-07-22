@@ -1,27 +1,12 @@
 import React from 'react';
 
-interface HeaderProps {
-  updateDate?: string;
-  updateTime?: string;
-}
-
-const Header = ({ updateDate, updateTime }: HeaderProps) => {
+const Header = () => {
   const today = new Date().toLocaleDateString('th-TH', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     weekday: 'long',
   });
-
-  const todayShort = new Date().toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-
-  // Prices announced on an earlier day must carry that day, or the board reads as
-  // if they were set today.
-  const isStale = Boolean(updateDate) && updateDate !== todayShort;
 
   return (
     <header className="flex flex-col items-center text-center space-y-3 md:space-y-4 xl:space-y-3 2xl:space-y-4 w-full">
@@ -45,15 +30,6 @@ const Header = ({ updateDate, updateTime }: HeaderProps) => {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5 xl:w-4 xl:h-4 2xl:w-5 2xl:h-5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
             {today}
           </span>
-          {updateTime && (
-            <>
-              <span className="hidden sm:inline xl:inline text-slate-500">•</span>
-              <span className="flex items-center gap-1.5 text-base md:text-lg xl:text-base 2xl:text-lg font-medium text-secondary/90">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 md:w-5 md:h-5 xl:w-4 xl:h-4 2xl:w-5 2xl:h-5 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                อัปเดต {isStale && `${updateDate} `}{updateTime} น.
-              </span>
-            </>
-          )}
         </div>
       </div>
     </header>

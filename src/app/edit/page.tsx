@@ -1,88 +1,135 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { getGoldPriceApi } from "@/api/mainApi";
 import { toast } from "sonner";
-import { useGoldStore } from '@/store/useGoldStore';
+
+import { getGoldPriceApi } from "@/api/mainApi";
+import { fetchSettings, saveSettings, uploadPromoImage, type DisplaySettings } from '@/lib/settings-client';
+
+const MAX_SLIDES = 5;
+
+type EditableFields = Pick<
+    DisplaySettings,
+    'goldBarMode' | 'goldBarBuy' | 'goldBarSell' | 'goldBuy' | 'goldSell' | 'pollSeconds'
+>;
+
+const toEditable = (settings: DisplaySettings): EditableFields => ({
+    goldBarMode: settings.goldBarMode,
+    goldBarBuy: settings.goldBarBuy,
+    goldBarSell: settings.goldBarSell,
+    goldBuy: settings.goldBuy,
+    goldSell: settings.goldSell,
+    pollSeconds: settings.pollSeconds,
+});
 
 export default function EditPage() {
-    const {
-        goldBarMode,
-        manualData,
-        apiData,
-        apiStatus,
-        promoImages,
-        setGoldBarMode,
-        setManualData,
-        setApiData,
-        setApiStatus,
-        syncApiToManual,
-        setPromoImage,
-    } = useGoldStore();
+    const [settings, setSettings] = useState<DisplaySettings | null>(null);
+    const [form, setForm] = useState<EditableFields | null>(null);
+    const [password, setPassword] = useState('');
+    const [marketPrice, setMarketPrice] = useState<{ buy: string; sell: string } | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
-    const fileInputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
-
-    const [loading, setLoading] = useState(!apiData);
-    const [isHydrated, setIsHydrated] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        setTimeout(() => setIsHydrated(true), 0);
-        const fetchData = async () => {
-            setApiStatus('loading');
-            try {
-                const res = await getGoldPriceApi();
-                if (res.data && res.data.response && res.data.response.price) {
-                    setApiData(res.data.response);
-                    setApiStatus('online');
-                } else {
-                    setApiStatus('offline');
-                }
-            } catch (e) {
-                console.error("Failed to fetch reference data", e);
-                setApiStatus('offline');
-            } finally {
-                setLoading(false);
-            }
-        };
+        fetchSettings()
+            .then((loaded) => {
+                setSettings(loaded);
+                setForm(toEditable(loaded));
+            })
+            .catch((error: Error) => setLoadError(error.message));
 
-        fetchData();
-    }, [setApiData, setApiStatus]);
+        getGoldPriceApi()
+            .then((res) => {
+                const bar = res.data?.response?.price?.gold_bar;
+                if (bar?.buy && bar?.sell) setMarketPrice(bar);
+            })
+            .catch(() => setMarketPrice(null));
+    }, []);
 
-    const handleSave = () => {
-        toast.success("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
+    const requirePassword = () => {
+        if (password) return true;
+        toast.error("กรอกรหัสผ่านก่อน");
+        return false;
     };
 
-    const handleImageUpload = (index: number, file: File) => {
-        if (!file.type.startsWith('image/')) {
-            toast.error("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+    const applySaved = (saved: DisplaySettings) => {
+        setSettings(saved);
+        setForm(toEditable(saved));
+    };
+
+    const handleSave = async () => {
+        if (!form || !requirePassword()) return;
+        setIsSaving(true);
+        try {
+            applySaved(await saveSettings(password, form));
+            toast.success("บันทึกแล้ว จอในร้านจะเปลี่ยนตามภายในไม่กี่วินาที");
+        } catch (error) {
+            toast.error((error as Error).message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleUpload = async (file: File) => {
+        if (!requirePassword()) return;
+        setIsSaving(true);
+        try {
+            applySaved(await uploadPromoImage(password, file));
+            toast.success("อัปโหลดรูปแล้ว");
+        } catch (error) {
+            toast.error((error as Error).message);
+        } finally {
+            setIsSaving(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    // ponytail: the file stays in the bucket, only the URL leaves the list. Storage is
+    // far cheaper than an orphan-cleanup path nobody will maintain.
+    const handleRemoveImage = async (url: string) => {
+        if (!settings || !requirePassword()) return;
+        setIsSaving(true);
+        try {
+            const promoImages = settings.promoImages.filter((image) => image !== url);
+            applySaved(await saveSettings(password, { promoImages }));
+            toast.success("ลบรูปแล้ว");
+        } catch (error) {
+            toast.error((error as Error).message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSyncMarketPrice = () => {
+        if (!marketPrice || !form) {
+            toast.error("ไม่มีราคาตลาดให้ดึงในขณะนี้");
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const dataUrl = e.target?.result as string;
-            setPromoImage(index, dataUrl);
-            toast.success(`อัปโหลดรูปโปรโมชั่น ${index + 1} เรียบร้อยแล้ว`);
-        };
-        reader.readAsDataURL(file);
+        setForm({ ...form, goldBarBuy: marketPrice.buy, goldBarSell: marketPrice.sell });
+        toast.success("ใส่ราคาตลาดในช่องแล้ว กด \"บันทึก\" เพื่อขึ้นจอ");
     };
 
-    const handleClearImage = (index: number) => {
-        setPromoImage(index, '');
-        if (fileInputRefs[index].current) fileInputRefs[index].current.value = '';
-        toast.success(`ลบรูปโปรโมชั่น ${index + 1} แล้ว`);
-    };
+    if (loadError) {
+        return (
+            <main className="min-h-screen bg-background flex items-center justify-center p-6 font-sans-thai">
+                <p className="text-rose-400 text-xl text-center">{loadError}</p>
+            </main>
+        );
+    }
 
-    const handleSync = () => {
-        if (!apiData) {
-            toast.error("ไม่มีข้อมูล API ให้ดึงในขณะนี้");
-            return;
-        }
-        syncApiToManual();
-        toast.success("ดึงราคาล่าสุดจาก API เข้าช่อง Manual แล้ว");
-    };
+    if (!form || !settings) {
+        return (
+            <main className="min-h-screen bg-background flex items-center justify-center font-sans-thai">
+                <p className="text-slate-500 animate-pulse text-xl">กำลังโหลดการตั้งค่า...</p>
+            </main>
+        );
+    }
 
-    if (!isHydrated) return null;
+    const inputClass = "w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none";
+    const labelClass = "text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block";
 
     return (
         <main className="relative min-h-screen w-full bg-background overflow-x-hidden flex flex-col font-sans-thai p-4 sm:p-6 lg:p-12">
@@ -97,87 +144,73 @@ export default function EditPage() {
                     <h1 className="text-3xl sm:text-4xl font-black text-white">Dashboard <span className="gold-gradient-text">Settings</span></h1>
                 </div>
 
-                {/* API Status & Controls */}
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full border ${apiStatus === 'online' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
-                        apiStatus === 'loading' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                            'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                        }`}>
-                        <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-                            apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' :
-                                'bg-rose-500'
-                            }`} />
-                        <span className="text-sm font-bold uppercase tracking-wider">
-                            API: {apiStatus === 'online' ? 'เชื่อมต่อแล้ว' : apiStatus === 'loading' ? 'กำลังเชื่อมต่อ...' : 'เชื่อมต่อไม่ได้'}
-                        </span>
-                    </div>
-
-                    <button
-                        onClick={handleSync}
-                        disabled={apiStatus !== 'online'}
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-white/5 text-slate-300 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30 disabled:pointer-events-none"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
-                        <span className="text-sm font-bold">ดึงราคา API ใส่ Manual</span>
-                    </button>
+                {/* Password */}
+                <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-amber-500/20 bg-amber-500/5 space-y-3">
+                    <label htmlFor="edit-password" className={labelClass}>รหัสผ่านพนักงาน</label>
+                    <input
+                        id="edit-password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="กรอกก่อนบันทึกหรืออัปโหลดรูป"
+                        className={inputClass}
+                    />
                 </div>
 
-                {/* Reference API Data Card */}
-                <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-amber-500/20 bg-amber-500/5">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-                        <h2 className="text-lg sm:text-xl font-bold text-amber-500 uppercase tracking-widest">ราคาตลาดปัจจุบัน (API Reference)</h2>
+                {/* Market reference */}
+                <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-white/5 space-y-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <h2 className="text-lg sm:text-xl font-bold text-amber-500 uppercase tracking-widest">ราคาตลาดปัจจุบัน</h2>
+                        <button
+                            onClick={handleSyncMarketPrice}
+                            disabled={!marketPrice}
+                            className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-white/5 text-slate-300 hover:text-white hover:bg-slate-700 transition-all disabled:opacity-30 disabled:pointer-events-none sm:ml-auto"
+                        >
+                            <span className="text-sm font-bold">ใส่ราคาตลาดในช่องทองคำแท่ง</span>
+                        </button>
                     </div>
-                    {loading && !apiData ? (
-                        <p className="text-slate-500 animate-pulse text-lg sm:text-xl">กำลังดึงข้อมูลราคาล่าสุด...</p>
-                    ) : apiData ? (
-                        <div className="flex flex-col items-start p-4 gap-2 sm:gap-3 bg-slate-900/40 rounded-2xl border border-white/5">
-                            <div className="text-slate-400 font-bold text-sm sm:text-base">ทองคำแท่ง:</div>
-                            <div className="text-xl sm:text-2xl font-black text-white leading-tight">
-                                ซื้อ: <span className="text-amber-500">{apiData.price?.gold_bar?.buy}</span> <br />
-                                ขาย: <span className="text-amber-500">{apiData.price?.gold_bar?.sell}</span>
-                            </div>
+                    {marketPrice ? (
+                        <div className="text-xl sm:text-2xl font-black text-white leading-tight">
+                            ทองคำแท่ง — ซื้อ: <span className="text-amber-500">{marketPrice.buy}</span> · ขาย: <span className="text-amber-500">{marketPrice.sell}</span>
                         </div>
                     ) : (
-                        <p className="text-rose-400">ไม่สามารถดึงข้อมูลอ้างอิงได้</p>
+                        <p className="text-rose-400">ดึงราคาตลาดไม่ได้ กรอกราคาเองด้านล่าง</p>
                     )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                    {/* Gold Bar Settings */}
+                    {/* Gold Bar */}
                     <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border-white/5 flex flex-col space-y-6 sm:space-y-8">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl sm:text-2xl font-bold text-white">ทองคำแท่ง 96.5%</h3>
                             <div className="flex p-1 bg-slate-900/50 rounded-xl border border-white/5">
-                                <button onClick={() => setGoldBarMode('api')} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${goldBarMode === 'api' ? 'bg-amber-500 text-slate-900' : 'text-slate-500'}`}>API</button>
-                                <button onClick={() => setGoldBarMode('manual')} className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${goldBarMode === 'manual' ? 'bg-amber-500 text-slate-900' : 'text-slate-500'}`}>Manual</button>
+                                {(['api', 'manual'] as const).map((mode) => (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setForm({ ...form, goldBarMode: mode })}
+                                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${form.goldBarMode === mode ? 'bg-amber-500 text-slate-900' : 'text-slate-500'}`}
+                                    >
+                                        {mode === 'api' ? 'API' : 'Manual'}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        <div className={`space-y-4 transition-all duration-300 ${goldBarMode === 'api' ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100'}`}>
+                        <div className={`space-y-4 transition-all duration-300 ${form.goldBarMode === 'api' ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100'}`}>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาซื้อ</label>
-                                    <input
-                                        type="text"
-                                        value={manualData.goldBarBuy}
-                                        onChange={(e) => setManualData({ goldBarBuy: e.target.value })}
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
-                                    />
+                                    <label htmlFor="bar-buy" className={labelClass}>ราคาซื้อ</label>
+                                    <input id="bar-buy" type="text" value={form.goldBarBuy} onChange={(e) => setForm({ ...form, goldBarBuy: e.target.value })} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาขาย</label>
-                                    <input
-                                        type="text"
-                                        value={manualData.goldBarSell}
-                                        onChange={(e) => setManualData({ goldBarSell: e.target.value })}
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
-                                    />
+                                    <label htmlFor="bar-sell" className={labelClass}>ราคาขาย</label>
+                                    <input id="bar-sell" type="text" value={form.goldBarSell} onChange={(e) => setForm({ ...form, goldBarSell: e.target.value })} className={inputClass} />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Gold Ornament Settings */}
+                    {/* Gold Ornament */}
                     <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border-white/5 flex flex-col space-y-6 sm:space-y-8">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl sm:text-2xl font-bold text-white">ทองรูปพรรณ 96.5%</h3>
@@ -187,86 +220,85 @@ export default function EditPage() {
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาซื้อ</label>
-                                    <input
-                                        type="text"
-                                        value={manualData.goldBuy}
-                                        onChange={(e) => setManualData({ goldBuy: e.target.value })}
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
-                                    />
+                                    <label htmlFor="ornament-buy" className={labelClass}>ราคาซื้อ</label>
+                                    <input id="ornament-buy" type="text" value={form.goldBuy} onChange={(e) => setForm({ ...form, goldBuy: e.target.value })} className={inputClass} />
                                 </div>
                                 <div>
-                                    <label className="text-slate-500 text-[10px] sm:text-xs font-bold uppercase mb-2 block">ราคาขาย</label>
-                                    <input
-                                        type="text"
-                                        value={manualData.goldSell}
-                                        onChange={(e) => setManualData({ goldSell: e.target.value })}
-                                        className="w-full bg-slate-800/50 border border-white/10 rounded-xl p-3 sm:p-4 text-lg sm:text-xl text-white font-bold focus:border-amber-500/50 outline-none"
-                                    />
+                                    <label htmlFor="ornament-sell" className={labelClass}>ราคาขาย</label>
+                                    <input id="ornament-sell" type="text" value={form.goldSell} onChange={(e) => setForm({ ...form, goldSell: e.target.value })} className={inputClass} />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Promo Image Upload */}
-                <div className="glass p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-white/5">
-                    <h2 className="text-lg sm:text-xl font-bold text-white mb-6">รูปโปรโมชั่น</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {[0, 1, 2].map((index) => (
-                            <div key={index} className="flex flex-col gap-3">
-                                <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-800/50 border border-white/10 flex items-center justify-center">
-                                    {promoImages[index] ? (
-                                        <>
-                                            <img
-                                                src={promoImages[index]}
-                                                alt={`Promotion ${index + 1}`}
-                                                className="absolute inset-0 w-full h-full object-cover"
-                                            />
-                                            <button
-                                                onClick={() => handleClearImage(index)}
-                                                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-rose-500/80 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
-                                                aria-label="ลบรูป"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center gap-2 text-slate-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                                            <span className="text-xs">ยังไม่มีรูป</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-slate-400 text-sm font-bold text-center">โปรโมชั่น {index + 1}</p>
-                                <input
-                                    ref={fileInputRefs[index]}
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleImageUpload(index, file);
-                                    }}
-                                />
+                {/* Promo images */}
+                <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border-white/5 space-y-6">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <h3 className="text-xl sm:text-2xl font-bold text-white">รูปโปรโมชั่น</h3>
+                        <span className="text-slate-500 text-sm">{settings.promoImages.length}/{MAX_SLIDES} รูป · จอจะวนเฉพาะรูปที่อัปไว้</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {settings.promoImages.map((url, index) => (
+                            <div key={url} className="relative aspect-video rounded-2xl overflow-hidden border border-white/10">
+                                <img src={url} alt={`โปรโมชั่นที่ ${index + 1}`} className="w-full h-full object-cover" />
                                 <button
-                                    onClick={() => fileInputRefs[index].current?.click()}
-                                    className="w-full py-2.5 rounded-xl bg-slate-800/50 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-700 transition-all text-sm font-bold flex items-center justify-center gap-2"
+                                    onClick={() => handleRemoveImage(url)}
+                                    disabled={isSaving}
+                                    className="absolute top-2 right-2 px-3 py-1.5 rounded-lg bg-rose-600/90 text-white text-xs font-bold hover:bg-rose-500 disabled:opacity-40"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                                    {promoImages[index] ? 'เปลี่ยนรูป' : 'อัปโหลดรูป'}
+                                    ลบ
                                 </button>
                             </div>
                         ))}
+
+                        {settings.promoImages.length < MAX_SLIDES && (
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isSaving}
+                                className="aspect-video rounded-2xl border-2 border-dashed border-white/15 text-slate-400 hover:text-white hover:border-amber-500/50 transition-all flex items-center justify-center text-base font-bold disabled:opacity-40"
+                            >
+                                + เพิ่มรูป
+                            </button>
+                        )}
                     </div>
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleUpload(file);
+                        }}
+                    />
                 </div>
 
-                <button
-                    onClick={handleSave}
-                    className="w-full bg-gradient-to-r from-amber-400 to-amber-600 p-5 sm:p-6 rounded-2xl sm:rounded-3xl text-[#0f172a] text-xl sm:text-2xl font-black shadow-xl shadow-amber-500/20 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                >
-                    บันทึกการตั้งค่าทั้งหมด
-                </button>
+                {/* Poll interval + save */}
+                <div className="glass p-6 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border-white/5 flex flex-col sm:flex-row sm:items-end gap-6">
+                    <div className="sm:w-64">
+                        <label htmlFor="poll-seconds" className={labelClass}>จอเช็คทุกกี่วินาที (5–300)</label>
+                        <input
+                            id="poll-seconds"
+                            type="number"
+                            min={5}
+                            max={300}
+                            value={form.pollSeconds}
+                            onChange={(e) => setForm({ ...form, pollSeconds: Number(e.target.value) })}
+                            className={inputClass}
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="sm:ml-auto px-8 py-4 rounded-2xl bg-amber-500 text-slate-900 text-lg font-black hover:bg-amber-400 transition-all disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                        {isSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+                    </button>
+                </div>
             </div>
         </main>
     );

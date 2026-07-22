@@ -1,71 +1,90 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import Header from '@/components/Header';
-import GoldPriceCard from '@/components/GoldPriceCard';
-import PromoSlider from '@/components/PromoSlider';
-import { getGoldPriceApi } from "@/api/mainApi";
+import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useGoldStore } from '@/store/useGoldStore';
+
+import { getGoldPriceApi } from "@/api/mainApi";
+import GoldPriceCard from '@/components/GoldPriceCard';
+import Header from '@/components/Header';
+import PromoSlider from '@/components/PromoSlider';
+import { fetchSettings, type DisplaySettings } from '@/lib/settings-client';
+
+const PRICE_REFRESH_MS = 5 * 60 * 1000;
+const DEFAULT_POLL_SECONDS = 20;
+
+interface GoldBarPrice {
+  buy: string;
+  sell: string;
+}
 
 export default function Home() {
-  const {
-    goldBarMode,
-    manualData,
-    apiData,
-    apiStatus,
-    setApiData,
-    setApiStatus
-  } = useGoldStore();
-
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [settings, setSettings] = useState<DisplaySettings | null>(null);
+  const [marketPrice, setMarketPrice] = useState<GoldBarPrice | null>(null);
+  const [isMarketOffline, setIsMarketOffline] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const savedRotation = Number(localStorage.getItem('gold-rotation')) || 0;
-    setRotation(savedRotation);
+    setRotation(Number(localStorage.getItem('gold-rotation')) || 0);
     setTimeout(() => setIsHydrated(true), 0);
-    const fetchData = async () => {
-      setApiStatus('loading');
-      try {
-        const res = await getGoldPriceApi();
-        if (res.data && res.data.response && res.data.response.price) {
-          setApiData(res.data.response);
-        } else {
-          setApiStatus('offline');
-        }
-      } catch (error) {
-        console.error("Failed to fetch gold prices:", error);
-        setApiStatus('offline');
-      }
-    };
+  }, []);
 
-    fetchData();
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchData, 5 * 60 * 1000);
+  const loadMarketPrice = useCallback(
+    () =>
+      getGoldPriceApi()
+        .then((res: { data?: { response?: { price?: { gold_bar?: GoldBarPrice } } } }) => {
+          const bar = res.data?.response?.price?.gold_bar;
+          if (bar?.buy && bar?.sell) {
+            setMarketPrice(bar);
+            setIsMarketOffline(false);
+          } else {
+            setIsMarketOffline(true);
+          }
+        })
+        .catch((error: Error) => {
+          console.error("Failed to fetch gold prices:", error);
+          setIsMarketOffline(true);
+        }),
+    [],
+  );
+
+  useEffect(() => {
+    loadMarketPrice();
+    const interval = setInterval(loadMarketPrice, PRICE_REFRESH_MS);
     return () => clearInterval(interval);
-  }, [setApiData, setApiStatus]);
+  }, [loadMarketPrice]);
 
-  console.log(apiData);
+  // The staff change prices on the shop's computer, so the board has to keep asking.
+  // Polling rather than a subscription because this screen stays on for weeks and a
+  // dropped socket would freeze it silently, where a failed poll just retries.
+  const pollSeconds = settings?.pollSeconds ?? DEFAULT_POLL_SECONDS;
+  useEffect(() => {
+    const load = () => fetchSettings().then(setSettings).catch(() => undefined);
+    load();
+    const interval = setInterval(load, pollSeconds * 1000);
+    return () => clearInterval(interval);
+  }, [pollSeconds]);
 
   if (!isHydrated) {
-    return <div className="min-h-screen bg-background" />; // Simple placeholder during hydration
+    return <div className="min-h-screen bg-background" />;
   }
 
-  // Determine display modes with automatic fallback
-  const effectiveBarMode = apiStatus === 'offline' ? 'manual' : goldBarMode;
+  // If settings cannot be read at all, still show the market price rather than a
+  // placeholder — an unattended board is better showing today's real gold bar price
+  // than nothing.
+  const goldBarMode = settings?.goldBarMode ?? 'api';
+  const isShowingMarketPrice = goldBarMode === 'api' && !isMarketOffline && marketPrice !== null;
 
-  // Prepare price data for display
   const displayGoldPrices = [
     {
       title: 'ทองคำแท่ง 96.5%',
-      buyPrice: effectiveBarMode === 'manual' ? manualData.goldBarBuy : (apiData?.price?.gold_bar?.buy || 'รอข้อมูล...'),
-      sellPrice: effectiveBarMode === 'manual' ? manualData.goldBarSell : (apiData?.price?.gold_bar?.sell || 'รอข้อมูล...'),
+      buyPrice: isShowingMarketPrice ? marketPrice.buy : (settings?.goldBarBuy || 'รอข้อมูล...'),
+      sellPrice: isShowingMarketPrice ? marketPrice.sell : (settings?.goldBarSell || 'รอข้อมูล...'),
     },
     {
       title: 'ทองรูปพรรณ 96.5%',
-      buyPrice: manualData.goldBuy,
-      sellPrice: manualData.goldSell,
+      buyPrice: settings?.goldBuy || 'รอข้อมูล...',
+      sellPrice: settings?.goldSell || 'รอข้อมูล...',
     },
   ];
 
@@ -97,11 +116,11 @@ export default function Home() {
       className="relative min-h-screen xl:h-screen xl:overflow-hidden w-full bg-background overflow-x-hidden flex flex-col font-sans-thai"
       style={rotationStyle}
     >
-      {/* Settings Button & API Status */}
+      {/* Settings Button & Rotation */}
       <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-50 flex items-center gap-3">
         <button
           onClick={() => {
-            const next = ((rotation + 90) % 360) as 0 | 90 | 180 | 270;
+            const next = (rotation + 90) % 360;
             setRotation(next);
             localStorage.setItem('gold-rotation', String(next));
           }}
@@ -110,19 +129,6 @@ export default function Home() {
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" className="sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6" /><path d="M2.5 22v-6h6" /><path d="M2 11.5a10 10 0 0 1 18.8-4.3" /><path d="M22 12.5a10 10 0 0 1-18.8 4.2" /></svg>
         </button>
-
-        {/* <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border glass ${apiStatus === 'online' ? 'border-emerald-500/20 text-emerald-400' :
-            apiStatus === 'loading' ? 'border-amber-500/20 text-amber-400' :
-              'border-rose-500/20 text-rose-400'
-          }`}>
-          <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' :
-              apiStatus === 'loading' ? 'bg-amber-500 animate-pulse' :
-                'bg-rose-500'
-            }`} />
-          <span className="text-[10px] font-black uppercase tracking-tighter">
-            {apiStatus === 'online' ? 'API Online' : apiStatus === 'loading' ? 'Connecting' : 'Offline Mode'}
-          </span>
-        </div> */}
 
         <Link
           href="/edit"
@@ -144,30 +150,17 @@ export default function Home() {
         <div className={`w-full flex flex-col gap-6 md:gap-8 ${isPortrait ? '' : 'xl:w-[45%] 2xl:w-[42%] xl:h-full xl:justify-between xl:gap-6'}`}>
           <Header />
           <div className={`flex flex-col gap-4 md:gap-6 mt-2 xl:mt-0 ${isPortrait ? '' : 'xl:flex-1 xl:justify-center xl:gap-4 2xl:gap-6'}`}>
-            {displayGoldPrices.map((price, index) => (
-              <GoldPriceCard key={index} {...price} />
+            {displayGoldPrices.map((price) => (
+              <GoldPriceCard key={price.title} {...price} />
             ))}
           </div>
         </div>
 
         {/* Promo Slider */}
         <div className={`w-full border-8 rounded-4xl border-primary ${isPortrait ? 'flex-1 min-h-0' : 'xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-full xl:min-h-0'}`}>
-          <PromoSlider />
+          <PromoSlider images={settings?.promoImages ?? []} />
         </div>
       </div>
-
-      {/* Scrolling Footer Marquee */}
-      {/* <div className="h-14 md:h-20 lg:h-24 2xl:h-32 bg-accent-red/30 border-t border-primary/20 flex items-center overflow-hidden whitespace-nowrap sticky bottom-0 z-50 backdrop-blur-md">
-        <div className="animate-marquee py-2">
-          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-primary mx-8 md:mx-12 uppercase tracking-widest">
-            ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
-          </span>
-          <span className="text-xl md:text-2xl lg:text-4xl 2xl:text-6xl font-bold text-primary mx-8 md:mx-12 uppercase tracking-widest">
-            ยินดีต้อนรับสู่ DailyGold • ราคาทองคำมีการเปลี่ยนแปลงตามกลไกตลาด • ตรวจสอบราคาล่าสุดได้ที่หน้าเคาน์เตอร์ • โปรโมชั่นพิเศษสำหรับสมาชิกใหม่ รับส่วนลดค่ากำเหน็จ 50% • มั่นใจในคุณภาพ ทองคำมาตรฐานสมาคมค้าทองคำ •
-          </span>
-        </div>
-      </div> */}
     </main>
   );
 }
-

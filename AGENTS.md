@@ -55,8 +55,27 @@ Uploaded as data URLs via `/edit` page, stored in Zustand (persisted to localSto
 
 ## API
 
-Hardcoded URL in `src/api/mainApi.js`. No env vars. Gold price data at `api.chnwt.dev/thai-gold-api/latest`.
+- `GET /api/gold-price` — gold bar price from `thaigold.info`. See [ADR 0002](docs/adr/0002-gold-price-source.md)
+  before reaching for goldtraders or `api.chnwt.dev`; both are unreachable from any cloud IP.
+- `GET /api/settings` — Display Settings for the board. Public.
+- `POST /api/settings` — save settings. Requires `password` in the body.
+- `POST /api/settings/promo` — upload a promo image (multipart). Requires `password`.
+
+Supabase is reached over plain `fetch` with the service key from `src/lib/display-settings.js`.
+There is deliberately no `@supabase/supabase-js`: the browser never holds a credential, so the
+table keeps RLS on with **no policies at all** and a leaked key grants nothing.
+
+## Environment
+
+Set in `.env.local` for development and in Vercel for production. None are `NEXT_PUBLIC_` —
+the service key must never reach the browser.
+
+| Variable | Value |
+|---|---|
+| `SUPABASE_URL` | `https://bihgcdceovfettoxmgme.supabase.co` |
+| `SUPABASE_SERVICE_KEY` | `service_role` key — Supabase dashboard → Project Settings → API Keys |
+| `EDIT_PASSWORD` | the staff password for `/edit` |
 
 ## Setup
 
-`npm install && npm run dev` — nothing else needed.
+`npm install`, create `.env.local` with the variables above, then `npm run dev`.

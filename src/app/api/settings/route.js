@@ -48,6 +48,14 @@ const toRow = (input) => {
         row.poll_seconds = seconds;
     }
 
+    if (input.slideSeconds !== undefined) {
+        const seconds = Number(input.slideSeconds);
+        if (!Number.isInteger(seconds) || seconds < 3 || seconds > 60) {
+            throw new Error("slideSeconds must be a whole number between 3 and 60");
+        }
+        row.slide_seconds = seconds;
+    }
+
     return row;
 };
 

@@ -2,17 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 
-const SLIDE_MS = 5000;
-
-const PromoSlider = ({ images }: { images: string[] }) => {
+const PromoSlider = ({ images, slideSeconds }: { images: string[]; slideSeconds: number }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const slideCount = images.length;
 
   useEffect(() => {
     if (slideCount < 2) return;
-    const interval = setInterval(() => setActiveIndex((current) => current + 1), SLIDE_MS);
+    const interval = setInterval(() => setActiveIndex((current) => current + 1), slideSeconds * 1000);
     return () => clearInterval(interval);
-  }, [slideCount]);
+  }, [slideCount, slideSeconds]);
 
   // Wrapping at render instead of resetting on change keeps the index valid when
   // staff delete a slide while the board is running.

@@ -11,7 +11,7 @@ const MAX_SLIDES = 5;
 
 type EditableFields = Pick<
     DisplaySettings,
-    'goldBarMode' | 'goldBarBuy' | 'goldBarSell' | 'goldBuy' | 'goldSell' | 'pollSeconds'
+    'goldBarMode' | 'goldBarBuy' | 'goldBarSell' | 'goldBuy' | 'goldSell' | 'pollSeconds' | 'slideSeconds'
 >;
 
 const toEditable = (settings: DisplaySettings): EditableFields => ({
@@ -21,6 +21,7 @@ const toEditable = (settings: DisplaySettings): EditableFields => ({
     goldBuy: settings.goldBuy,
     goldSell: settings.goldSell,
     pollSeconds: settings.pollSeconds,
+    slideSeconds: settings.slideSeconds,
 });
 
 export default function EditPage() {
@@ -287,6 +288,18 @@ export default function EditPage() {
                             max={300}
                             value={form.pollSeconds}
                             onChange={(e) => setForm({ ...form, pollSeconds: Number(e.target.value) })}
+                            className={inputClass}
+                        />
+                    </div>
+                    <div className="sm:w-64">
+                        <label htmlFor="slide-seconds" className={labelClass}>เปลี่ยนรูปทุกกี่วินาที (3–60)</label>
+                        <input
+                            id="slide-seconds"
+                            type="number"
+                            min={3}
+                            max={60}
+                            value={form.slideSeconds}
+                            onChange={(e) => setForm({ ...form, slideSeconds: Number(e.target.value) })}
                             className={inputClass}
                         />
                     </div>

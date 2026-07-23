@@ -9,7 +9,7 @@ import Header from '@/components/Header';
 import PromoSlider from '@/components/PromoSlider';
 import { fetchSettings, type DisplaySettings } from '@/lib/settings-client';
 
-const PRICE_REFRESH_MS = 5 * 60 * 1000;
+const PRICE_REFRESH_MS = 30 * 1000;
 const DEFAULT_POLL_SECONDS = 20;
 
 interface GoldBarPrice {
@@ -158,7 +158,7 @@ export default function Home() {
 
         {/* Promo Slider */}
         <div className={`w-full border-8 rounded-4xl border-primary ${isPortrait ? 'flex-1 min-h-0' : 'xl:flex-1 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] xl:h-full xl:min-h-0'}`}>
-          <PromoSlider images={settings?.promoImages ?? []} />
+          <PromoSlider images={settings?.promoImages ?? []} slideSeconds={settings?.slideSeconds ?? 5} />
         </div>
       </div>
     </main>

@@ -28,6 +28,7 @@ export const toClient = (row) => ({
     goldSell: row.gold_sell,
     promoImages: row.promo_images,
     pollSeconds: row.poll_seconds,
+    slideSeconds: row.slide_seconds,
     updatedAt: row.updated_at,
 });
 

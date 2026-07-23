@@ -6,6 +6,7 @@ export interface DisplaySettings {
   goldSell: string;
   promoImages: string[];
   pollSeconds: number;
+  slideSeconds: number;
   updatedAt: string;
 }
 
